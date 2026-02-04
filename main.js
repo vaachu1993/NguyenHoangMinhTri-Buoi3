@@ -475,6 +475,11 @@ function initCreateProduct() {
                 .map(img => img.trim())
                 .filter(img => img);
 
+            // Validate images
+            if (images.length === 0) {
+                throw new Error('Please provide at least one image URL');
+            }
+
             const data = {
                 title: document.getElementById('createTitle').value,
                 price: parseFloat(document.getElementById('createPrice').value),
@@ -482,6 +487,8 @@ function initCreateProduct() {
                 categoryId: parseInt(document.getElementById('createCategoryId').value),
                 images: images
             };
+
+            console.log('Creating product with data:', data);
 
             const response = await fetch(API_BASE, {
                 method: 'POST',
@@ -491,9 +498,16 @@ function initCreateProduct() {
                 body: JSON.stringify(data)
             });
 
-            if (!response.ok) throw new Error('Failed to create product');
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error:', errorText);
+                throw new Error('Failed to create product: ' + response.status);
+            }
 
             const newProduct = await response.json();
+            console.log('Created product:', newProduct);
             
             // Close modal
             bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
@@ -503,6 +517,7 @@ function initCreateProduct() {
             
             showAlert('Product created successfully!', 'success');
         } catch (error) {
+            console.error('Create product error:', error);
             showAlert('Error creating product: ' + error.message, 'danger');
         } finally {
             submitBtn.disabled = false;
